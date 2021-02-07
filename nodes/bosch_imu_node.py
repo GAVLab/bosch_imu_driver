@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import serial
 import rospy
@@ -102,7 +102,7 @@ def read_from_dev(ser, reg_addr, length):
             continue
 
         if buf_in[0] == START_BYTE_ERR:
-            rospy.logwarn("Something bad when reading")
+            #rospy.logwarn("Something bad when reading")
             return 0
 
         if buf_in[0] != START_BYTE_RESP:
@@ -143,6 +143,7 @@ imu_data = Imu()            # Filtered data
 imu_raw = Imu()             # Raw IMU data
 temperature_msg = Temperature() # Temperature
 mag_msg = MagneticField()       # Magnetometer data
+status_msg = DiagnosticStatus() # Status data
 
 # Main function
 if __name__ == '__main__':
@@ -153,6 +154,7 @@ if __name__ == '__main__':
     pub_raw = rospy.Publisher('imu/raw', Imu, queue_size=1)
     pub_mag = rospy.Publisher('imu/mag', MagneticField, queue_size=1)
     pub_temp = rospy.Publisher('imu/temp', Temperature, queue_size=1)
+    pub_status = rospy.Publisher('imu/status', DiagnosticStatus, queue_size=1)
 
     # srv = Server(imuConfig, reconfig_callback)  # define dynamic_reconfigure callback
 
@@ -175,6 +177,7 @@ if __name__ == '__main__':
     # Check if IMU ID is correct
     buf = read_from_dev(ser, CHIP_ID, 1)
     if buf == 0 or buf[0] != BNO055_ID:
+        
         #rospy.logerr("Device ID is incorrect. Shutdown.")
         sys.exit(0)
 
@@ -214,7 +217,7 @@ if __name__ == '__main__':
     seq = 0
 
     while not rospy.is_shutdown():
-        buf = read_from_dev(ser, ACCEL_DATA, 45)
+        buf = read_from_dev(ser, ACCEL_DATA, 51)
         if buf != 0:
             # Publish raw data
             imu_raw.header.stamp = rospy.Time.now()
@@ -264,7 +267,22 @@ if __name__ == '__main__':
             temperature_msg.header.seq = seq
             temperature_msg.temperature = buf[44]
             pub_temp.publish(temperature_msg)
-
+  
+            # Publish diagnostic status
+            status_msg.level = 0
+            status_msg.name = "BNO055"
+            status_msg.message = ""    
+                   
+            calib_stat = KeyValue(key='calib_stat',value=str(buf[45]))
+            selftest_result = KeyValue(key='selftest_result',value=str(buf[46]))
+            intr_stat = KeyValue(key='intr_stat',value=str(buf[47]))
+            sys_clk_stat = KeyValue(key='sys_clk_stat',value=str(buf[48]))
+            sys_stat = KeyValue(key='sys_stat',value=str(buf[49]))
+            sys_err = KeyValue(key='sys_err',value=str(buf[50]))
+            
+            status_msg.values = [calib_stat,selftest_result,intr_stat,sys_clk_stat,sys_stat,sys_err]
+            pub_status.publish(status_msg)
+        
             seq = seq + 1
         rate.sleep()
     ser.close()

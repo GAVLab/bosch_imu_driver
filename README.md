@@ -3,7 +3,7 @@ A driver for the sensor IMU Bosch BNO055. It was implemented only the UART commu
 (correct sensor mode should be selected).
 
 Parameters:
-- **port** (default: '/dev/ttyUSB0') - path to USB port where device was connected.
+- **port** (default: '/dev/ttyUSB0') - path to USB port where device was connected. Raspberry Pi: set to `/dev/serial0`
 - **frame_id** (default: 'imu_link') - the frame in which sensor data will be published. 
 - **frequency** (default: 100) - the frequency of reading from device and publishing data in Hz.
 - **operation_mode** (default: OPER_MODE_NDOF) - the operation mode of sensor BNO055. Other modes could be found in sensor [datasheet](https://www.bosch-sensortec.com/bst/products/all_products/bno055).
@@ -15,3 +15,4 @@ Publishes:
 - **/imu/raw** [(sensor_msgs/Imu)](http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
 - **/imu/mag** [(sensor_msgs/MagneticField)](http://docs.ros.org/api/sensor_msgs/html/msg/MagneticField.html)
 - **/imu/temp** [(sensor_msgs/Temperature)](http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html)
+- **/imu/status** [(diagnostic_msgs/DiagnosticStatus)](http://docs.ros.org/api/diagnostic_msgs/html/msg/DiagnosticStatus.html)
